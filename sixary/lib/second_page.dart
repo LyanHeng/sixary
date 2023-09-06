@@ -9,15 +9,31 @@ class SecondPage extends StatelessWidget {
   final List<String> textList;
   final List<String> imageFilePathList;
 
+  Route _createRoute(List<String> textList, List<String> imageFilePathList) {
+    return PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) =>
+          SecondPage(textList: textList, imageFilePathList: imageFilePathList),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        const begin = Offset(1.0, 0.0);
+        const end = Offset.zero;
+        const curve = Curves.ease;
+
+        var tween =
+            Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+        final offsetAnimation = animation.drive(tween);
+
+        return SlideTransition(
+          position: offsetAnimation,
+          child: child,
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     void goToNextPage(List<String> textList, List<String> imageFilePathList) {
-      Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SecondPage(
-                textList: textList, imageFilePathList: imageFilePathList),
-          ));
+      Navigator.of(context).push(_createRoute(textList, imageFilePathList));
     }
 
     void goToMenu() {
@@ -32,13 +48,15 @@ class SecondPage extends StatelessWidget {
 
     return Scaffold(
         body: GestureDetector(
-            onTap: () {
-              textList.removeAt(0);
-              imageFilePathList.removeAt(0);
-              if (textList.isNotEmpty) {
-                goToNextPage(textList, imageFilePathList);
-              } else {
-                goToMenu();
+            onPanUpdate: (details) {
+              if (details.delta.dx < 0) {
+                textList.removeAt(0);
+                imageFilePathList.removeAt(0);
+                if (textList.isNotEmpty) {
+                  goToNextPage(textList, imageFilePathList);
+                } else {
+                  goToMenu();
+                }
               }
             },
             child: Container(
